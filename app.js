@@ -26,7 +26,7 @@ const initializeDbServer = async () => {
 
 initializeDbServer();
 
-const hasPriorityAndStatusProperty = (requestQuery) => {
+const hasPriorityAndStatusProperties = (requestQuery) => {
   return (
     requestQuery.priority !== undefined && requestQuery.status !== undefined
   );
@@ -42,11 +42,11 @@ const hasStatusProperty = (requestQuery) => {
 
 app.get("/todos/", async (request, response) => {
   let data = null;
-  const getTodosQuery = "";
+  let getTodosQuery = "";
   const { search_q = "", priority, status } = request.query;
 
   switch (true) {
-    case hasPriorityAndStatusProperty(request.query):
+    case hasPriorityAndStatusProperties(request.query): //if this is true then below query is taken in the code
       getTodosQuery = `
    SELECT
     *
@@ -57,7 +57,6 @@ app.get("/todos/", async (request, response) => {
     AND status = '${status}'
     AND priority = '${priority}';`;
       break;
-
     case hasPriorityProperty(request.query):
       getTodosQuery = `
    SELECT
@@ -68,7 +67,6 @@ app.get("/todos/", async (request, response) => {
     todo LIKE '%${search_q}%'
     AND priority = '${priority}';`;
       break;
-
     case hasStatusProperty(request.query):
       getTodosQuery = `
    SELECT
@@ -89,13 +87,12 @@ app.get("/todos/", async (request, response) => {
     todo LIKE '%${search_q}%';`;
   }
 
-  data = await db.all(getTodosQuery);
+  data = await database.all(getTodosQuery);
   response.send(data);
 });
-
 app.get("/todos/:todoId/", async (request, response) => {
   const { todoId } = request.params;
-  const getTodoQuery = `select * from todo where id = '${todoId}';`;
+  const getTodoQuery = `select * from todo where id = ${todoId};`;
   const todo = await db.get(getTodoQuery);
   response.send(todo);
 });
@@ -110,6 +107,7 @@ app.post("/todos/", async (request, response) => {
 
 app.put("/todos/:todoId/", async (request, response) => {
   const { todoId } = request.params;
+  let update = "";
   const requestDetails = request.body;
   switch (true) {
     case requestDetails.status !== undefined:
